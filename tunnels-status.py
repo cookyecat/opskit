@@ -141,7 +141,7 @@ def table_lines(rows, fields):
     widths = {key: max(len(key), *(len(row[key]) for row in rows))
               for key in fields}
     def format_row(row):
-        return "  ".join(row[key].ljust(widths[key]) for key in fields).rstrip()
+        return "  ".join(row[key].ljust(widths[key]) for key in fields)
     yield format_row({key: key for key in fields})
     yield "  ".join("-" * widths[key] for key in fields)
     for row in rows:
