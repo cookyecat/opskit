@@ -1,0 +1,21 @@
+name: Validate utilities
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run read-only regression tests
+        run: python3 -m unittest discover -s tests -v
