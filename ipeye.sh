@@ -53,7 +53,16 @@ primary_ip() {
   elif [[ "$(uname -s)" == Darwin ]]; then
     iface="$(route -n get default 2>/dev/null |
       awk '/interface:/{print $2; exit}')"
-    [[ -n "$iface" ]] && ipconfig getifaddr "$iface"
+    if [[ -n "$iface" ]] && ipconfig getifaddr "$iface" 2>/dev/null; then
+      return 0
+    fi
+    # A VPN/TUN interface may be the default route but have no ipconfig IPv4.
+    for iface in en0 en1 en2; do
+      if ipconfig getifaddr "$iface" 2>/dev/null; then
+        return 0
+      fi
+    done
+    return 1
   elif command -v hostname >/dev/null 2>&1; then
     hostname -I 2>/dev/null | awk '{print $1}'
   fi
