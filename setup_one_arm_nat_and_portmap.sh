@@ -140,11 +140,44 @@ main() {
 
   persist_rules
 
-  say "完成！当前映射："
-  printf "  SSH  : %s\n" "${MAPS_SSH[@]}"
+  say "完成！当前配置："
+  say "SSH 端口映射：未启用（main 中相关循环已注释）"
   printf "  vLLM : %s\n" "${MAPS_VLLM[@]}"
-  say "测试示例：ssh -p 21011 user@<外部可达的202地址>  |  curl http://<202地址>:10001/v1/models"
+  say "测试示例：curl http://<202地址>:10001/v1/models"
 }
 
-main "$@"
+show_plan() {
+  printf 'READ ONLY: no firewall, sysctl or persistent configuration changes.\n'
+  printf 'Interface: %s | Subnet: %s | Gateway: %s\n' "$IF" "$SUBNET" "$GW_IP"
+  printf 'Local SSH INPUT: %s (port %s) | Persistence: %s\n' \
+    "$ALLOW_LOCAL_SSH_INPUT" "$LOCAL_SSH_PORT" "$PERSIST"
+  printf 'vLLM DNAT mappings (enabled by default execution):\n'
+  printf '  %s\n' "${MAPS_VLLM[@]}"
+  printf 'SSH DNAT mappings: disabled (not applied by main).\n'
+}
 
+case "${1:-}" in
+  "")
+    main ;;
+  --apply)
+    main ;;
+  --dry-run)
+    show_plan ;;
+  --help|-h)
+    cat <<'HELP'
+Usage: setup_one_arm_nat_and_portmap.sh [--dry-run|--apply|--help]
+
+  --dry-run  Print configured interface, subnet and active port mappings.
+             Does not change the firewall, sysctl, or any files.
+  --apply    Apply configured rules (same behavior as invoking without args).
+  --help     Show this help.
+
+WARNING: Intended only for the hard-coded Ubuntu one-arm gateway topology.
+Running it modifies iptables/sysctl and may persist rules across reboots.
+Verify the interface, subnet, port mappings and maintenance window first.
+HELP
+    ;;
+  *)
+    err "不支持的参数：$1（使用 --help 查看用法）"
+    exit 2 ;;
+esac
